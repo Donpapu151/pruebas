@@ -1,16 +1,21 @@
 import requests
+import time
+from datetime import datetime
 
-# 🛍️ PEGA TU URL DE DISCORD AQUÍ:
-URL_MI_WEBHOOK = "https://discord.com/api/webhooks/1507247515869646901/H_vZBpFd1q6wpe1oeDWo_XQKOLjgzxM2_gpdNFv0hMior6EO_owMcL3s-BkCSjldMy_D"
+# 🛍️ 1. AQUÍ VA TU ENLACE DE DISCORD (Asegúrate de poner tu webhook completo):
+URL_MI_WEBHOOK = "https://discord.com/api/webhooks/1507247515869646901/H_vZBpFd1q6wpe1oeDWo_XQKOLjgzxM2_gpdNFv0hMior6EO_owMcL3s-BkCSjldMy_D" 
 
-def enviar_ofertas():
-    url_mejores_ofertas = "https://www.cheapshark.com/api/1.0/deals?upperPrice=50&pageSize=30&sortBy=Metacritic"
+def obtener_y_enviar_ofertas():
+    # 🌟 2. AQUÍ VA LA API DE JUEGOS (No la cambies por Discord):
+    url_mejores_ofertas = "https://www.cheapshark.com/api/1.0/deals?upperPrice=50&pageSize=100&sortBy=Metacritic"
+    
     nombres_tiendas = {
         "1": "Steam", "25": "Epic Games Store", "7": "GOG", "3": "GreenManGaming", "11": "Humble Store"
     }
     
-    print("⏰ Iniciando el escaneo único de ofertas del día...")
+    print("⏰ Ejecutando el escaneo diario de ofertas...")
     try:
+        # Aquí el bot consulta a la API de juegos
         respuesta = requests.get(url_mejores_ofertas)
         if respuesta.status_code == 200:
             ofertas = respuesta.json()
@@ -29,7 +34,7 @@ def enviar_ofertas():
                 ahorro = round(float(juego['savings']))
                 id_tienda = juego['storeID']
                 
-                if ahorro < 15:
+                if ahorro < 20:
                     continue
                     
                 if titulo in juegos_agregados:
@@ -48,13 +53,27 @@ def enviar_ofertas():
             if contador_top == 1:
                 mensaje_discord += "❌ Hoy no se encontraron ofertazos que superen los filtros de calidad."
             
-            # Enviar a Discord
+            # Aquí el bot le manda el resultado final a tu Discord
             requests.post(URL_MI_WEBHOOK, json={"content": mensaje_discord})
-            print("¡Ofertazos enviados con éxito! 🎉")
+            print("¡Mensaje diario enviado con éxito a Discord! 🎉")
         else:
-            print(f"Error en la API: {respuesta.status_code}")
+            print(f"Error en la API de CheapShark: {respuesta.status_code}")
     except Exception as e:
         print(f"Error inesperado: {e}")
 
 if __name__ == "__main__":
-    enviar_ofertas()
+    print("🚀 Alarma inteligente optimizada. Patrullando horarios críticos...")
+    
+    # Mandamos un reporte inicial inmediato para verificar que funcione
+    obtener_y_enviar_ofertas()
+    
+    while True:
+        ahora = datetime.now()
+        
+        # Alarma 1: 12:00 PM | Alarma 2: 08:00 PM
+        if (ahora.hour == 12 and ahora.minute == 0) or (ahora.hour == 20 and ahora.minute == 0):
+            print(f"⏰ ¡Hora crítica detectada ({ahora.hour}:00)! Buscando ofertas...")
+            obtener_y_enviar_ofertas()
+            time.sleep(65) 
+        
+        time.sleep(30)
